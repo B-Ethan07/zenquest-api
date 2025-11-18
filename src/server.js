@@ -7,9 +7,15 @@ import { findUserByEmail, verifyPassword, validateLogin, requireAuth } from './m
 import cookieParser from "cookie-parser";
 import { statsRouter } from "./routes/stats.js";
 import { badgesRouter } from "./routes/badges.js";
+import cors from "cors";
 
 // Création de l'application Express
 const app = express();
+
+app.use(cors({
+  origin: "http://localhost:5173", // l'URL de ton frontend
+  credentials: true // permet d'envoyer les cookies JWT si tu les utilises
+}));
 
 // Port du serveur, par défaut 3000 ou défini par la variable d'environnement SERVER_PORT
 const serverPort = process.env.SERVER_PORT ?? 3000;
