@@ -14,8 +14,7 @@ export async function createUser(req, res) {
         return res.status(201).json({ id: result.insertId });
     } catch (err) {
         console.log(err);
-        // ❌ ERREUR ICI : sendStatus termine la réponse, on ne peut pas chaîner .json()
-        return res.status(500).json({ error: "Internal server error" }); // ✅ CORRIGÉ
+        return res.status(500).json({ error: "Internal server error" }); 
     }
 }
 
@@ -38,6 +37,7 @@ export async function login(req, res) {
     });
     
     // ✅ RETOURNER LE TOKEN dans la réponse JSON pour Postman
+    // TODO: Le retirer plus tard !!!!!!!!!!!!!
     return res.status(200).json({ 
         message: "Login successful",
         token,  // Pour pouvoir copier le token dans Postman
@@ -65,7 +65,6 @@ export async function myProfile(req, res) {
         res.json(users[0]);
     } catch (err) {
         console.error(err);
-        // ❌ ERREUR ICI aussi
-        return res.status(500).json({ error: "Internal server error" }); // ✅ CORRIGÉ
+        return res.status(500).json({ error: "Internal server error" }); 
     }
 }
