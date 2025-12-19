@@ -1,4 +1,13 @@
 import database from "../config/database.js";
+import { getBadgeIcon } from "../config/badgeIcons.js";
+
+// Fonction helper pour ajouter les icônes
+function enrichBadgeWithIcon(badge) {
+  return {
+    ...badge,
+    icon: getBadgeIcon(badge.icon)
+  };
+}
 
 // ==================== GET ALL BADGES ====================
 // GET /api/badges
@@ -8,7 +17,11 @@ export async function getAllBadges(req, res) {
     const [badges] = await database.query(
       "SELECT * FROM badges ORDER BY points ASC"
     );
-    res.json(badges);
+    
+    // Ajouter les emojis
+    const enrichedBadges = badges.map(enrichBadgeWithIcon);
+    
+    res.json(enrichedBadges);
   } catch (err) {
     console.error("Error fetching badges:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -38,9 +51,11 @@ export async function getUserBadges(req, res) {
       [userId]
     );
 
+    const enrichedBadges = badges.map(enrichBadgeWithIcon);
+
     res.json({
-      badges,
-      total: badges.length
+      badges: enrichedBadges,
+      total: enrichedBadges.length
     });
   } catch (err) {
     console.error("Error fetching user badges:", err);
@@ -55,7 +70,6 @@ export async function getBadgesProgress(req, res) {
   const userId = req.auth.sub;
 
   try {
-    // 1. Récupérer les stats de l'utilisateur
     const [[stats]] = await database.query(
       `SELECT 
         COUNT(*) as total_entries,
@@ -65,7 +79,6 @@ export async function getBadgesProgress(req, res) {
       [userId]
     );
 
-    // 2. Récupérer tous les badges avec leur statut
     const [badges] = await database.query(
       `SELECT 
         b.*,
@@ -77,7 +90,6 @@ export async function getBadgesProgress(req, res) {
       [userId]
     );
 
-    // 3. Calculer la progression pour chaque badge
     const badgesWithProgress = badges.map(badge => {
       let current = 0;
       let target = 0;
@@ -112,7 +124,7 @@ export async function getBadgesProgress(req, res) {
           progress = badge.is_unlocked ? 100 : 0;
       }
 
-      return {
+      return enrichBadgeWithIcon({
         ...badge,
         is_unlocked: Boolean(badge.is_unlocked),
         progress: {
@@ -120,10 +132,9 @@ export async function getBadgesProgress(req, res) {
           target,
           percentage: Math.round(progress)
         }
-      };
+      });
     });
 
-    // 4. Calculer stats globales
     const unlockedCount = badgesWithProgress.filter(b => b.is_unlocked).length;
     const totalBadges = badgesWithProgress.length;
 
